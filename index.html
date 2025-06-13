@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riyad Quantum Computer Simulator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 30%, #16213e 70%, #0f3460 100%);
+            color: #ffffff;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, rgba(0, 212, 255, 0.1), transparent, rgba(255, 0, 255, 0.1), transparent);
+            animation: rotate 20s linear infinite;
+            z-index: -1;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .header h1 {
+            font-size: 3em;
+            background: linear-gradient(45deg, #00d4ff, #00ff88, #ff00ff, #ffaa00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #b3b3b3;
+        }
+
+        .nav-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-tab {
+            padding: 12px 25px;
+            margin: 0 5px;
+            border: none;
+            background: transparent;
+            color: #ffffff;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            border-radius: 20px;
+            padding: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .panel h3 {
+            color: #00d4ff;
+            margin-bottom: 20px;
+            font-size: 1.4em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .circuit-builder {
+            grid-column: 1 / -1;
+        }
+
+        .qubit-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .qubit-row:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .qubit-label {
+            width: 80px;
+            font-weight: bold;
+            color: #00ff88;
+            font-size: 1.1em;
+        }
+
+        .gate-container {
+            display: flex;
+            gap: 8px;
+            flex: 1;
+            overflow-x: auto;
+            padding: 8px;
+        }
+
+        .gate-slot {
+            width: 70px;
+            height: 50px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            min-width: 70px;
+        }
+
+        .gate-slot:hover {
+            border-color: #00d4ff;
+            background: rgba(0, 212, 255, 0.15);
+            transform: scale(1.05);
+        }
+
+        .gate {
+            width: 60px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gate:hover {
+            transform: scale(1.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .gate-x { background: linear-gradient(45deg, #ff4757, #c44569); }
+        .gate-y { background: linear-gradient(45deg, #ffa502, #ff6348); }
+        .gate-z { background: linear-gradient(45deg, #2ed573, #20bf6b); }
+        .gate-h { background: linear-gradient(45deg, #3742fa, #2f3542); }
+        .gate-s { background: linear-gradient(45deg, #ff6b81, #ee5a6f); }
+        .gate-t { background: linear-gradient(45deg, #70a1ff, #5352ed); }
+        .gate-cnot { background: linear-gradient(45deg, #5352ed, #3742fa); }
+        .gate-rx { background: linear-gradient(45deg, #ff9ff3, #f368e0); }
+        .gate-ry { background: linear-gradient(45deg, #54a0ff, #2e86de); }
+        .gate-rz { background: linear-gradient(45deg, #5f27cd, #341f97); }
+
+        .gate-palette {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+        }
+
+        .palette-gate {
+            padding: 12px 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+
+        .palette-gate:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .palette-gate.selected {
+            border-color: #00d4ff;
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #00d4ff, #0099cc);
+            color: white;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-danger {
+            background: linear-gradient(45deg, #ff4757, #cc3645);
+        }
+
+        .btn-success {
+            background: linear-gradient(45deg, #2ed573, #25a85b);
+        }
+
+        .btn-warning {
+            background: linear-gradient(45deg, #ffa502, #ff6348);
+        }
+
+        .state-display {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            font-family: 'Courier New', monospace;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .amplitude-bar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .amplitude-label {
+            width: 100px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .amplitude-visual {
+            flex: 1;
+            height: 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 0 15px;
+            position: relative;
+        }
+
+        .amplitude-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00d4ff, #00ff88, #ff00ff);
+            transition: width 0.5s ease;
+            border-radius: 12px;
+        }
+
+        .amplitude-value {
+            width: 120px;
+            text-align: right;
+            font-size: 12px;
+            font-family: monospace;
+        }
+
+        .complex-display {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        .complex-number {
+            display: inline-block;
+            margin: 2px 5px;
+            padding: 4px 8px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .measurement-result {
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.15), rgba(0, 255, 136, 0.05));
+            border: 2px solid #00ff88;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            text-align: center;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .info-panel {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 15px;
+            border-left: 5px solid #00d4ff;
+        }
+
+        .qubit-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .qubit-input {
+            padding: 10px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            color: white;
+            width: 100px;
+            font-size: 14px;
+        }
+
+        .qubit-input:focus {
+            border-color: #00d4ff;
+            outline: none;
+        }
+
+        .histogram {
+            display: flex;
+            align-items: flex-end; /* Changed to flex-end */
+            height: 200px;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative; /* Added for absolute positioning of labels */
+        }
+
+        .histogram-bar {
+            flex: 1;
+            background: linear-gradient(0deg, #00d4ff, #00ff88, #ff00ff);
+            border-radius: 5px 5px 0 0;
+            transition: height 0.7s ease;
+            position: relative;
+            min-height: 5px;
+            display: flex; /* Added for centering labels */
+            flex-direction: column; /* Added for centering labels */
+            justify-content: flex-end; /* Added for centering labels */
+            align-items: center; /* Added for centering labels */
+        }
+
+        .histogram-label {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: #ccc;
+            font-weight: bold;
+            white-space: nowrap; /* Prevent text wrapping */
+        }
+
+        .histogram-count {
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: #fff;
+            font-weight: bold;
+        }
+
+        .bloch-sphere {
+            width: 250px;
+            height: 250px;
+            margin: 20px auto;
+            position: relative;
+            background: radial-gradient(circle, rgba(0, 212, 255, 0.1), transparent);
+            border: 2px solid rgba(0, 212, 255, 0.3);
+            border-radius: 50%;
+            /* For actual Bloch sphere visualization, you'd integrate a 3D library like Three.js */
+        }
+
+        .manual-content {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .manual-section {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 25px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #00d4ff;
+        }
+
+        .manual-section h3 {
+            color: #00ff88;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .manual-section h4 {
+            color: #00d4ff;
+            margin: 15px 0 10px 0;
+        }
+
+        .manual-section ul, .manual-section ol {
+            margin-left: 20px;
+            line-height: 1.6;
+        }
+
+        .manual-section li {
+            margin-bottom: 8px;
+        }
+
+        .code-example {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quantum-effect {
+            animation: quantum-pulse 3s infinite;
+        }
+
+        @keyframes quantum-pulse {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+
+        .gate-description {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .matrix-display {
+            font-family: 'Courier New', monospace;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+
+        .phase-wheel {
+            width: 150px;
+            height: 150px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: relative;
+            margin: 15px auto;
+        }
+
+        .phase-indicator {
+            width: 4px;
+            height: 70px;
+            background: #00d4ff;
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform-origin: bottom center;
+            transform: translateX(-50%);
+            transition: transform 0.5s ease;
+        }
+
+        .statistics-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+
+        .stat-label {
+            color: #b3b3b3;
+            font-size: 0.9em;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left: 4px solid #00d4ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .export-options {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: rgba(0, 0, 0, 0.9);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .control-buttons {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔬 Riyad Quantum Computer Simulator</h1>
+            <p>Advanced Quantum Circuit Simulation with Complex Mathematics</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('simulator')">🔬 Simulator</button>
+            <button class="nav-tab" onclick="showTab('manual')">📚 User Manual</button>
+            <button class="nav-tab" onclick="showTab('examples')">🎯 Examples</button>
+            <button class="nav-tab" onclick="showTab('theory')">🧮 Theory</button>
+        </div>
+
+        <div id="simulator" class="tab-content active">
+            <div class="main-content">
+                <div class="panel circuit-builder">
+                    <h3>🔧 Quantum Circuit Builder</h3>
+                    
+                    <div class="qubit-controls">
+                        <label><strong>Number of Qubits:</strong></label>
+                        <input type="number" id="qubitCount" class="qubit-input" min="1" max="6" value="3">
+                        <button class="btn" onclick="updateQubitCount()">Update System</button>
+                        <div class="tooltip">
+                            <span>ℹ️</span>
+                            <span class="tooltiptext">Max 6 qubits (64 quantum states) for performance</span>
+                        </div>
+                    </div>
+
+                    <div class="gate-palette">
+                        <div class="palette-gate gate-x" onclick="selectGate('X')" title="Pauli-X (NOT) Gate">X</div>
+                        <div class="palette-gate gate-y" onclick="selectGate('Y')" title="Pauli-Y Gate">Y</div>
+                        <div class="palette-gate gate-z" onclick="selectGate('Z')" title="Pauli-Z Gate">Z</div>
+                        <div class="palette-gate gate-h" onclick="selectGate('H')" title="Hadamard Gate">H</div>
+                        <div class="palette-gate gate-s" onclick="selectGate('S')" title="S Gate (Phase)">S</div>
+                        <div class="palette-gate gate-t" onclick="selectGate('T')" title="T Gate (π/8)">T</div>
+                        <div class="palette-gate gate-cnot" onclick="selectGate('CNOT')" title="Controlled-NOT Gate">CNOT</div>
+                        <div class="palette-gate gate-rx" onclick="selectGate('RX')" title="Rotation around X-axis">RX</div>
+                        <div class="palette-gate gate-ry" onclick="selectGate('RY')" title="Rotation around Y-axis">RY</div>
+                        <div class="palette-gate gate-rz" onclick="selectGate('RZ')" title="Rotation around Z-axis">RZ</div>
+                    </div>
+
+                    <div id="gate-description" class="gate-description">
+                        Select a gate to see its description and matrix representation
+                    </div>
+
+                    <div id="circuit-grid"></div>
+
+                    <div class="control-buttons">
+                        <button class="btn btn-success" onclick="runCircuit()">▶️ Run Circuit</button>
+                        <button class="btn" onclick="stepCircuit()">👣 Step Through</button>
+                        <button class="btn btn-warning" onclick="measureAll()">📊 Measure All</button>
+                        <button class="btn" onclick="resetState()">🔄 Reset State</button>
+                        <button class="btn btn-danger" onclick="clearCircuit()">🗑️ Clear Circuit</button>
+                    </div>
+
+                    <div class="export-options">
+                        <button class="btn" onclick="exportCircuit()">💾 Export Circuit</button>
+                        <button class="btn" onclick="importCircuit()">📁 Import Circuit</button>
+                        <button class="btn" onclick="exportResults()">📋 Export Results</button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>⚛️ Quantum State Vector</h3>
+                    <div id="state-display" class="state-display"></div>
+                    
+                    <div class="complex-display">
+                        <h4>Complex Amplitudes:</h4>
+                        <div id="complex-amplitudes"></div>
+                    </div>
+
+                    <div class="info-panel">
+                        <div class="statistics-panel">
+                            <div class="stat-card">
+                                <div class="stat-value" id="current-state">|000⟩</div>
+                                <div class="stat-label">Most Probable State</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="entanglement-status">No</div>
+                                <div class="stat-label">Entangled</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="superposition-status">No</div>
+                                <div class="stat-label">Superposition</div>
+                            </div>
+                            <div class="stat-card">
+                                <div class="stat-value" id="purity-measure">1.000</div>
+                                <div class="stat-label">State Purity</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="phase-wheel">
+                        <div class="phase-indicator" id="phase-indicator"></div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📈 Measurement Results & Statistics</h3>
+                    <div id="measurement-results"></div>
+                    <div id="histogram" class="histogram"></div>
+                    
+                    <div class="statistics-panel" style="margin-top: 20px;">
+                        <div class="stat-card">
+                            <div class="stat-value" id="total-measurements">0</div>
+                            <div class="stat-label">Total Measurements</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-value" id="entropy-measure">0.000</div>
+                            <div class="stat-label">Von Neumann Entropy</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>🎛️ Advanced Controls</h3>
+                    
+                    <div class="qubit-controls">
+                        <label><strong>Rotation Angle (π):</strong></label>
+                        <input type="number" id="rotationAngle" class="qubit-input" step="0.1" value="1.0">
+                        <label><strong>Noise Level:</strong></label>
+                        <input type="range" id="noiseLevel" min="0" max="0.1" step="0.01" value="0">
+                        <span id="noiseValue">0%</span>
+                    </div>
+
+                    <div class="control-buttons">
+                        <button class="btn" onclick="addNoise()">🌪️ Add Quantum Noise</button>
+                        <button class="btn" onclick="optimizeCircuit()">⚡ Optimize Circuit</button>
+                        <button class="btn" onclick="analyzeComplexity()">🧮 Analyze Complexity</button>
+                    </div>
+
+                    <div id="analysis-results" class="info-panel" style="display: none;">
+                        <h4>Circuit Analysis:</h4>
+                        <div id="complexity-analysis"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading-spinner" id="loadingSpinner"></div>
+        </div>
+
+        <div id="manual" class="tab-content">
+            <div class="manual-content">
+                <div class="manual-section">
+                    <h3>📖 Welcome to Riyad Quantum Computer Simulator</h3>
+                    <p>This advanced quantum computer simulator provides a comprehensive platform for learning and experimenting with quantum computing concepts. Built with full complex number mathematics and real quantum mechanics principles.</p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🚀 Getting Started</h3>
+                    <h4>1. Basic Setup</h4>
+                    <ul>
+                        <li><strong>Choose Qubits:</strong> Select the number of qubits (1-6) for your quantum system</li>
+                        <li><strong>Select Gates:</strong> Click on quantum gates in the palette to select them</li>
+                        <li><strong>Build Circuit:</strong> Click on empty slots in the circuit grid to place gates</li>
+                        <li><strong>Run Simulation:</strong> Execute your quantum circuit and observe results</li>
+                    </ul>
+
+                    <h4>2. Understanding the Interface</h4>
+                    <ul>
+                        <li><strong>Circuit Builder:</strong> Main area for constructing quantum circuits</li>
+                        <li><strong>State Vector:</strong> Shows current quantum state with complex amplitudes</li>
+                        <li><strong>Measurement Results:</strong> Displays measurement outcomes and statistics</li>
+                        <li><strong>Advanced Controls:</strong> Fine-tune simulation parameters</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🔬 Quantum Gates Guide</h3>
+                    
+                    <h4>Single-Qubit Gates</h4>
+                    <div class="code-example">
+                        <strong>Pauli Gates:</strong><br>
+                        • X Gate: Bit flip (NOT gate) - flips |0⟩ ↔ |1⟩<br>
+                        • Y Gate: Bit and phase flip - complex rotation<br>
+                        • Z Gate: Phase flip - flips phase of |1⟩ state<br><br>
+                        
+                        <strong>Rotation Gates:</strong><br>
+                        • RX(θ): Rotation around X-axis by angle θ<br>
+                        • RY(θ): Rotation around Y-axis by angle θ<br>
+                        • RZ(θ): Rotation around Z-axis by angle θ<br><br>
+                        
+                        <strong>Hadamard Gate (H):</strong><br>
+                        • Creates superposition: |0⟩ → (|0⟩ + |1⟩)/√2<br>
+                        • Essential for quantum algorithms<br><br>
+                        
+                        <strong>Phase Gates:</strong><br>
+                        • S Gate: Phase gate (π/2 rotation)<br>
+                        • T Gate: π/8 gate (π/4 rotation)
+                    </div>
+
+                    <h4>Two-Qubit Gates</h4>
+                    <div class="code-example">
+                        <strong>CNOT Gate:</strong><br>
+                        • Controlled-NOT: Flips target if control is |1⟩<br>
+                        • Creates entanglement: Between control and target qubits<br>
+                        • Fundamental for quantum error correction and building complex circuits
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3>📊 Understanding Quantum States</h3>
+                    
+                    <h4>State Vector Representation</h4>
+                    <p>Quantum states are represented as complex vectors. For a 3-qubit system, there are 2³ = 8 possible basis states:</p>
+                    <div class="code-example">
+                        $|ψ⟩ = α₀|000⟩ + α₁|001⟩ + α₂|010⟩ + α₃|011⟩ + α₄|100⟩ + α₅|101⟩ + α₆|110⟩ + α₇|111⟩$<br><br>
+                        Where $αᵢ$ are complex amplitudes satisfying: $Σ|αᵢ|² = 1$
+                    </div>
+
+                    <h4>Complex Amplitudes</h4>
+                    <ul>
+                        <li><strong>Real Part:</strong> The horizontal component of the amplitude.</li>
+                        <li><strong>Imaginary Part:</strong> The vertical component of the amplitude, multiplied by $i$ (the imaginary unit).</li>
+                        <li><strong>Magnitude ($|αᵢ|$):</strong> Represents the "strength" of the probability. The square of the magnitude ($|αᵢ|^2$) gives the probability of measuring that specific basis state.</li>
+                        <li><strong>Phase (arg($αᵢ$)):</strong> The angle of the complex number in the complex plane. This subtle property is crucial for quantum interference, allowing probabilities to increase or decrease due to constructive or destructive interference.</li>
+                    </ul>
+
+                    <h4>Quantum Properties</h4>
+                    <ul>
+                        <li><strong>Superposition:</strong> A quantum state exists in multiple classical states simultaneously. For example, a single qubit can be in a superposition of $|0⟩$ and $|1⟩$. This is visible when multiple amplitudes have non-zero probabilities.</li>
+                        <li><strong>Entanglement:</strong> A unique quantum phenomenon where two or more qubits become correlated in such a way that the state of one qubit instantaneously influences the state of the others, regardless of the distance between them. This is detected when the state vector cannot be factored into individual qubit states.</li>
+                        <li><strong>Measurement:</strong> The act of observing a quantum state. Measurement causes the superposition to collapse into a single, definite classical state (e.g., either $|0⟩$ or $|1⟩$ for a single qubit), with a probability determined by the amplitude squared.</li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>🎮 How to Use Advanced Features</h3>
+                    
+                    <h4>Rotation Gates with Custom Angles</h4>
+                    <ol>
+                        <li>Set the desired **rotation angle (in units of π)** in the "Advanced Controls" panel.</li>
+                        <li>Select an **RX, RY, or RZ gate** from the palette.</li>
+                        <li>Place it on the circuit grid. The gate will apply a rotation using the currently set angle.</li>
+                        <li>Experiment with different angles (e.g., 0.5 for π/2, 1.0 for π, 2.0 for 2π) to observe various quantum effects.</li>
+                    </ol>
+
+                    <h4>Quantum Noise Simulation</h4>
+                    <ol>
+                        <li>Adjust the **noise level slider** (from 0% to 10%) in the "Advanced Controls" panel.</li>
+                        <li>Click the "🌪️ Add Quantum Noise" button. This will apply random phase and amplitude noise to the current quantum state.</li>
+                        <li>Observe how increasing noise affects the quantum state's coherence and the probability distribution in the measurement results.</li>
+                        <li>This feature is useful for understanding the challenges of building real quantum computers and for studying quantum error correction techniques.</li>
+                    </ol>
+
+                    <h4>Circuit Analysis</h4>
+                    <ul>
+                        <li><strong>Optimize Circuit:</strong> (Future Feature) This button would ideally suggest ways to reduce the number of gates or circuit depth for a more efficient implementation.</li>
+                        <li><strong>Analyze Complexity:</strong> This will display statistics about your current circuit, such as the total number of gates, the circuit depth (the longest path of sequential gates), and the types of gates used.</li>
+                        <li><strong>Export/Import:</strong>
+                            <ul>
+                                <li><strong>Export Circuit:</strong> Saves your current circuit configuration as a JSON file, allowing you to share or reload it later.</li>
+                                <li><strong>Import Circuit:</strong> Loads a previously saved circuit configuration from a JSON file.</li>
+                                <li><strong>Export Results:</strong> Exports the current measurement histogram data as a CSV file for external analysis.</li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="manual-section">
+                    <h3>📈 Interpreting Results</h3>
+                    
+                    <h4>State Display</h4>
+                    <ul>
+                        <li><strong>Probability Bars:</strong> The visual bars for each basis state show the magnitude squared of their complex amplitudes, directly representing the probability of measuring that state.</li>
+                        <li><strong>Complex Numbers:</strong> Each state's amplitude is shown as a complex number ($a + bi$). The real part ($a$) and imaginary part ($b$) are critical.</li>
+                        <li><strong>Phase Wheel:</strong> The phase wheel dynamically visualizes the global phase of the overall quantum state. While global phase doesn't affect measurement probabilities, relative phases between amplitudes are crucial for interference effects.</li>
+                    </ul>
+
+                    <h4>Measurement Results & Statistics</h4>
+                    <ul>
+                        <li><strong>Measurement Result:</strong> After a measurement, a specific classical bit string (e.g., '011') is displayed as the outcome. This is a probabilistic event based on the quantum state's amplitudes.</li>
+                        <li><strong>Histogram:</strong> The histogram visually represents the frequency of each possible measurement outcome over multiple runs. The taller the bar, the more frequently that state was measured. This converges to the theoretical probabilities as more measurements are taken.</li>
+                        <li><strong>Total Measurements:</strong> Tracks the cumulative number of times the `Measure All` function has been run.</li>
+                        <li><strong>Von Neumann Entropy:</strong> (Future Feature) A measure of the "mixedness" or entanglement in a quantum state. A value of 0 indicates a pure state (no entanglement/classical mixture), while higher values indicate increasing entanglement or mixedness.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div id="examples" class="tab-content">
+            <div class="manual-content">
+                <div class="manual-section">
+                    <h3>🎯 Quantum Circuit Examples</h3>
+                    <p>Here are some fundamental quantum circuits to help you get started and understand core concepts.</p>
+                </div>
+
+                <h4>Single Qubit Superposition</h4>
+                <div class="manual-section">
+                    <h3>Hadamard Gate (Superposition)</h3>
+                    <p>Apply a Hadamard gate to a qubit initially in the $|0⟩$ state to put it into a superposition of $|0⟩$ and $|1⟩$.</p>
+                    <div class="code-example">
+                        Circuit: Q0 --- H ---
+                        <br>
+                        Expected Outcome: 50% |0⟩, 50% |1⟩ upon measurement.
+                    </div>
+                    <button class="btn" onclick="loadExample('superposition')">Load Superposition Example</button>
+                </div>
+
+                <h4>Entangled Bell State</h4>
+                <div class="manual-section">
+                    <h3>Bell State (Entanglement)</h3>
+                    <p>Create an entangled Bell state (e.g., $|Φ⁺⟩ = (|00⟩ + |11⟩)/√2$) using a Hadamard and a CNOT gate.</p>
+                    <div class="code-example">
+                        Circuit: <br>
+                        Q0 --- H --- ● --- <br>
+                        Q1 ----------- X --- <br>
+                        Expected Outcome: 50% |00⟩, 50% |11⟩ upon measurement. Always correlated.
+                    </div>
+                    <button class="btn" onclick="loadExample('bell_state')">Load Bell State Example</button>
+                </div>
+
+                <h4>Quantum Teleportation (Simplified)</h4>
+                <div class="manual-section">
+                    <h3>Quantum Teleportation</h3>
+                    <p>Demonstrates the basic idea of quantum teleportation. This simplified circuit teleports the state of Q0 to Q2 using entanglement and classical communication.</p>
+                    <div class="code-example">
+                        Circuit: <br>
+                        Q0 --- |initial state> --- H --- M (c0) --- <br>
+                        Q1 --- H --- ● --- M (c1) --- <br>
+                        Q2 ----------- X --- Z (if c0) --- X (if c1) <br>
+                        <br>
+                        *Note: This is a simplified visual. Full teleportation requires classical communication, not directly simulated in the circuit builder.*
+                    </div>
+                    <button class="btn" onclick="loadExample('teleportation')">Load Teleportation Example</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="theory" class="tab-content">
+            <div class="manual-content">
+                <div class="manual-section">
+                    <h3>🧮 Quantum Computing Theory</h3>
+                    <p>A brief overview of the underlying mathematical and physical principles.</p>
+                </div>
+
+                <div class="manual-section">
+                    <h3>Complex Numbers in Quantum Mechanics</h3>
+                    <p>Quantum mechanics fundamentally relies on complex numbers. A complex number $z$ is expressed as $z = a + bi$, where $a$ is the real part, $b$ is the imaginary part, and $i = \sqrt{-1}$.</p>
+                    <ul>
+                        <li><strong>Amplitude:</strong> In quantum mechanics, the state of a qubit is described by a superposition of basis states, each with a complex amplitude. For a single qubit, this is $|ψ⟩ = α|0⟩ + β|1⟩$.</li>
+                        <li><strong>Probability:</strong> The probability of measuring a particular state is given by the square of the magnitude of its complex amplitude. For $|0⟩$, the probability is $|α|^2 = a^2 + b^2$. For $|1⟩$, it's $|β|^2$.</li>
+                        <li><strong>Phase:</strong> The phase of a complex number refers to its angle in the complex plane. While global phase doesn't affect measurement probabilities, relative phases between amplitudes are crucial for quantum interference.</li>
+                    </ul>
+                    <div class="code-example">
+                        A complex number $z = r e^{iφ}$ can be written as $z = r (\cos φ + i \sin φ)$. <br>
+                        Here, $r$ is the magnitude and $φ$ is the phase.
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3>Quantum Gates as Unitary Matrices</h3>
+                    <p>Quantum gates are represented by **unitary matrices**. A matrix $U$ is unitary if $U U^† = U^† U = I$, where $U^†$ is the conjugate transpose of $U$, and $I$ is the identity matrix. Unitary matrices preserve the norm of quantum states, which is essential because probabilities must sum to 1.</p>
+                    <h4>Examples of Gate Matrices:</h4>
+                    <div class="matrix-display">
+                        <strong>Hadamard (H) Gate:</strong><br>
+                        $$ H = \frac{1}{\sqrt{2}} \begin{pmatrix} 1 & 1 \\ 1 & -1 \end{pmatrix} $$
+                        <br>
+                        <strong>Pauli-X (X) Gate:</strong><br>
+                        $$ X = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} $$
+                        <br>
+                        <strong>Pauli-Z (Z) Gate:</strong><br>
+                        $$ Z = \begin{pmatrix} 1 & 0 \\ 0 & -1 \end{pmatrix} $$
+                        <br>
+                        <strong>Controlled-NOT (CNOT) Gate (Control Qubit 0, Target Qubit 1):</strong><br>
+                        $$ CNOT = \begin{pmatrix} 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \\ 0 & 0 & 0 & 1 \\ 0 & 0 & 1 & 0 \end{pmatrix} $$
+                        <br>
+                        The general form for a rotation gate $R_x(θ)$ is:
+                        $$ R_x(θ) = \begin{pmatrix} \cos(\theta/2) & -i \sin(\theta/2) \\ -i \sin(\theta/2) & \cos(\theta/2) \end{pmatrix} $$
+                    </div>
+                </div>
+
+                <div class="manual-section">
+                    <h3>Tensor Products for Multi-Qubit Systems</h3>
+                    <p>To describe a system of multiple qubits, we use the **tensor product** (also known as the Kronecker product). If qubit 1 is in state $|ψ_1⟩$ and qubit 2 is in state $|ψ_2⟩$, the combined state is $|ψ_1⟩ \otimes |ψ_2⟩$.</p>
+                    <p>When applying a gate to a specific qubit within a multi-qubit system, the operation matrix is formed by taking the tensor product of the gate's matrix with identity matrices for the other qubits. For example, applying an X gate to the first qubit of a 2-qubit system:</p>
+                    <div class="matrix-display">
+                        $X \otimes I = \begin{pmatrix} 0 & 1 \\ 1 & 0 \end{pmatrix} \otimes \begin{pmatrix} 1 & 0 \\ 0 & 1 \end{pmatrix} = \begin{pmatrix} 0 \cdot I & 1 \cdot I \\ 1 \cdot I & 0 \cdot I \end{pmatrix} = \begin{pmatrix} 0 & 0 & 1 & 0 \\ 0 & 0 & 0 & 1 \\ 1 & 0 & 0 & 0 \\ 0 & 1 & 0 & 0 \end{pmatrix}$
+                    </div>
+                    <p>This allows us to represent operations on individual qubits or controlled operations within the larger Hilbert space of the multi-qubit system.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Complex Number Class
+        class Complex {
+            constructor(re, im) {
+                this.re = re;
+                this.im = im;
+            }
+
+            add(other) {
+                return new Complex(this.re + other.re, this.im + other.im);
+            }
+
+            sub(other) {
+                return new Complex(this.re - other.re, this.im - other.im);
+            }
+
+            mul(other) {
+                if (typeof other === 'number') {
+                    return new Complex(this.re * other, this.im * other);
+                }
+                return new Complex(
+                    this.re * other.re - this.im * other.im,
+                    this.re * other.im + this.im * other.re
+                );
+            }
+
+            div(other) {
+                if (typeof other === 'number') {
+                    if (other === 0) throw new Error("Division by zero");
+                    return new Complex(this.re / other, this.im / other);
+                }
+                const denom = other.re * other.re + other.im * other.im;
+                if (denom === 0) throw new Error("Division by zero");
+                return new Complex(
+                    (this.re * other.re + this.im * other.im) / denom,
+                    (this.im * other.re - this.re * other.im) / denom
+                );
+            }
+
+            conj() {
+                return new Complex(this.re, -this.im);
+            }
+
+            magnitude() {
+                return Math.sqrt(this.re * this.re + this.im * this.im);
+            }
+
+            magnitudeSq() {
+                return this.re * this.re + this.im * this.im;
+            }
+
+            phase() {
+                return Math.atan2(this.im, this.re);
+            }
+
+            static fromPolar(magnitude, phase) {
+                return new Complex(magnitude * Math.cos(phase), magnitude * Math.sin(phase));
+            }
+
+            toString(precision = 3) {
+                const real = this.re.toFixed(precision);
+                const imag = this.im.toFixed(precision);
+                if (imag === '0.000') return real;
+                if (real === '0.000') return imag + 'i';
+                return `${real} ${imag[0] === '-' ? '-' : '+'} ${imag.substring(imag[0] === '-' ? 1 : 0)}i`;
+            }
+        }
+
+        // Global state variables
+        let numQubits = 3;
+        let quantumState = []; // Array of Complex objects representing the state vector
+        let circuit = []; // Stores gates: circuit[qubitIndex][timeStep] = { type: 'H', target: 0, control: null, angle: null }
+        let selectedGateType = null;
+        let measurementCounts = {}; // Stores { '000': count, '001': count, ... }
+        let totalMeasurements = 0;
+        let circuitHistory = []; // For step-through functionality
+        let currentStep = 0;
+
+        const GATE_DEFINITIONS = {
+            'X': {
+                matrix: [[new Complex(0, 0), new Complex(1, 0)], [new Complex(1, 0), new Complex(0, 0)]],
+                description: "Pauli-X (NOT) Gate: Flips the qubit state ($|0⟩ \\leftrightarrow |1⟩$).",
+                type: 'single'
+            },
+            'Y': {
+                matrix: [[new Complex(0, 0), new Complex(0, -1)], [new Complex(0, 1), new Complex(0, 0)]],
+                description: "Pauli-Y Gate: Performs a bit and phase flip. Rotates by $\\pi$ around the Y-axis of the Bloch sphere.",
+                type: 'single'
+            },
+            'Z': {
+                matrix: [[new Complex(1, 0), new Complex(0, 0)], [new Complex(0, 0), new Complex(-1, 0)]],
+                description: "Pauli-Z Gate: Flips the phase of the $|1⟩$ state. Rotates by $\\pi$ around the Z-axis of the Bloch sphere.",
+                type: 'single'
+            },
+            'H': {
+                matrix: [[new Complex(1 / Math.sqrt(2), 0), new Complex(1 / Math.sqrt(2), 0)], [new Complex(1 / Math.sqrt(2), 0), new Complex(-1 / Math.sqrt(2), 0)]],
+                description: "Hadamard Gate: Creates superposition. Maps $|0⟩ \\to (|0⟩+|1⟩)/\\sqrt{2}$ and $|1⟩ \\to (|0⟩-|1⟩)/\\sqrt{2}$.",
+                type: 'single'
+            },
+            'S': {
+                matrix: [[new Complex(1, 0), new Complex(0, 0)], [new Complex(0, 0), new Complex(0, 1)]],
+                description: "S Gate (Phase Gate): Applies a $\\pi/2$ phase shift to the $|1⟩$ state. ($|1⟩ \\to i|1⟩$).",
+                type: 'single'
+            },
+            'T': {
+                matrix: [[new Complex(1, 0), new Complex(0, 0)], [new Complex(0, 0), Complex.fromPolar(1, Math.PI / 4)]],
+                description: "T Gate ($\\pi/8$ Gate): Applies a $\\pi/4$ phase shift to the $|1⟩$ state. ($|1⟩ \\to e^{i\\pi/4}|1⟩$).",
+                type: 'single'
+            },
+            'CNOT': {
+                matrix: null, // CNOT is a controlled gate, matrix depends on control/target
+                description: "Controlled-NOT Gate: Flips the target qubit if the control qubit is in the $|1⟩$ state. Essential for entanglement.",
+                type: 'controlled'
+            },
+            'RX': {
+                matrix: (theta) => [
+                    [new Complex(Math.cos(theta / 2), 0), new Complex(0, -Math.sin(theta / 2))],
+                    [new Complex(0, -Math.sin(theta / 2)), new Complex(Math.cos(theta / 2), 0)]
+                ],
+                description: "Rotation around X-axis (RX(θ)): Rotates the qubit by an angle $\\theta$ around the X-axis of the Bloch sphere. θ is set in 'Rotation Angle (π)' input.",
+                type: 'rotation'
+            },
+            'RY': {
+                matrix: (theta) => [
+                    [new Complex(Math.cos(theta / 2), 0), new Complex(-Math.sin(theta / 2), 0)],
+                    [new Complex(Math.sin(theta / 2), 0), new Complex(Math.cos(theta / 2), 0)]
+                ],
+                description: "Rotation around Y-axis (RY(θ)): Rotates the qubit by an angle $\\theta$ around the Y-axis of the Bloch sphere. θ is set in 'Rotation Angle (π)' input.",
+                type: 'rotation'
+            },
+            'RZ': {
+                matrix: (theta) => [
+                    [Complex.fromPolar(1, -theta / 2), new Complex(0, 0)],
+                    [new Complex(0, 0), Complex.fromPolar(1, theta / 2)]
+                ],
+                description: "Rotation around Z-axis (RZ(θ)): Rotates the qubit by an angle $\\theta$ around the Z-axis of the Bloch sphere. θ is set in 'Rotation Angle (π)' input.",
+                type: 'rotation'
+            }
+        };
+
+        // Initialize state
+        document.addEventListener('DOMContentLoaded', () => {
+            updateQubitCount();
+            document.getElementById('noiseLevel').addEventListener('input', (event) => {
+                document.getElementById('noiseValue').textContent = `${(parseFloat(event.target.value) * 100).toFixed(0)}%`;
+            });
+            renderCircuit();
+            resetState();
+            updateGatePaletteSelection(); // Ensure no gate is initially selected
+        });
+
+        // Tab functionality
+        function showTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+            document.querySelector(`.nav-tab[onclick="showTab('${tabId}')"]`).classList.add('active');
+        }
+
+        // --- Quantum Simulation Core ---
+
+        function initializeState(nQubits) {
+            const numStates = 2 ** nQubits;
+            quantumState = new Array(numStates).fill(new Complex(0, 0));
+            quantumState[0] = new Complex(1, 0); // Start in |00...0> state
+            measurementCounts = {};
+            for (let i = 0; i < numStates; i++) {
+                measurementCounts[i.toString(2).padStart(nQubits, '0')] = 0;
+            }
+            totalMeasurements = 0;
+            updateDisplay();
+            updateHistogram();
+            document.getElementById('measurement-results').innerHTML = '<p>No measurements yet.</p>';
+        }
+
+        function resetState() {
+            currentStep = 0;
+            circuitHistory = [];
+            initializeState(numQubits);
+        }
+
+        function updateQubitCount() {
+            const newCount = parseInt(document.getElementById('qubitCount').value);
+            if (isNaN(newCount) || newCount < 1 || newCount > 6) {
+                alert("Please enter a number of qubits between 1 and 6.");
+                document.getElementById('qubitCount').value = numQubits; // Revert to old value
+                return;
+            }
+            numQubits = newCount;
+            clearCircuit(false); // Clear circuit but don't reset state yet
+            initializeState(numQubits); // Initialize state after qubit count is updated
+            renderCircuit();
+        }
+
+        function createIdentityMatrix(size) {
+            const matrix = [];
+            for (let i = 0; i < size; i++) {
+                matrix[i] = [];
+                for (let j = 0; j < size; j++) {
+                    matrix[i][j] = new Complex(i === j ? 1 : 0, 0);
+                }
+            }
+            return matrix;
+        }
+
+        function tensorProduct(matrixA, matrixB) {
+            const rowsA = matrixA.length;
+            const colsA = matrixA[0].length;
+            const rowsB = matrixB.length;
+            const colsB = matrixB[0].length;
+
+            const resultRows = rowsA * rowsB;
+            const resultCols = colsA * colsB;
+            const result = Array(resultRows).fill(0).map(() => Array(resultCols).fill(new Complex(0, 0)));
+
+            for (let i = 0; i < rowsA; i++) {
+                for (let j = 0; j < colsA; j++) {
+                    for (let k = 0; k < rowsB; k++) {
+                        for (let l = 0; l < colsB; l++) {
+                            result[i * rowsB + k][j * colsB + l] = matrixA[i][j].mul(matrixB[k][l]);
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        function getGateMatrix(gateType, angle = Math.PI) {
+            const gateDef = GATE_DEFINITIONS[gateType];
+            if (!gateDef) throw new Error(`Unknown gate type: ${gateType}`);
+
+            if (gateDef.type === 'single') {
+                return gateDef.matrix;
+            } else if (gateDef.type === 'rotation') {
+                return gateDef.matrix(angle);
+            }
+            // CNOT matrix needs special handling as it's not a simple single-qubit gate
+            return null;
+        }
+
+        function applyGate(stateVector, gateType, targetQubit, controlQubit = null, angle = null) {
+            const N = numQubits;
+            const D = 2 ** N;
+            const newState = new Array(D).fill(new Complex(0, 0));
+
+            if (gateType === 'CNOT') {
+                if (controlQubit === null || targetQubit === null) throw new Error("CNOT requires control and target qubits.");
+                if (controlQubit === targetQubit) throw new Error("Control and target qubits cannot be the same.");
+
+                for (let i = 0; i < D; i++) {
+                    // Check if control qubit is |1> for this basis state
+                    const controlBit = (i >> (N - 1 - controlQubit)) & 1;
+                    if (controlBit === 1) {
+                        // If control is 1, flip target qubit
+                        const targetBit = (i >> (N - 1 - targetQubit)) & 1;
+                        const flipped_i = i ^ (1 << (N - 1 - targetQubit));
+                        newState[flipped_i] = newState[flipped_i].add(stateVector[i]);
+                    } else {
+                        // If control is 0, state remains unchanged
+                        newState[i] = newState[i].add(stateVector[i]);
+                    }
+                }
+            } else {
+                const singleQubitGateMatrix = getGateMatrix(gateType, angle * Math.PI); // Angle in radians
+                const qubitMatrixSize = 2; // Single qubit gates are 2x2
+
+                // Construct the full matrix for the entire system
+                let fullGateMatrix = createIdentityMatrix(qubitMatrixSize);
+                let currentQubitIndex = N - 1; // Start from the least significant qubit (rightmost)
+
+                // Build tensor product of identity matrices for qubits to the right of the target
+                for (let i = N - 1; i > targetQubit; i--) {
+                    fullGateMatrix = tensorProduct(fullGateMatrix, createIdentityMatrix(qubitMatrixSize));
+                }
+
+                // Apply the actual gate matrix
+                fullGateMatrix = tensorProduct(fullGateMatrix, singleQubitGateMatrix);
+
+                // Build tensor product of identity matrices for qubits to the left of the target
+                for (let i = targetQubit - 1; i >= 0; i--) {
+                    fullGateMatrix = tensorProduct(fullGateMatrix, createIdentityMatrix(qubitMatrixSize));
+                }
+
+                // Apply matrix to state vector
+                for (let i = 0; i < D; i++) {
+                    for (let j = 0; j < D; j++) {
+                        newState[i] = newState[i].add(fullGateMatrix[i][j].mul(stateVector[j]));
+                    }
+                }
+            }
+            
+            // Normalize the state vector (due to potential floating point errors or noise if added)
+            let totalMagnitudeSq = newState.reduce((sum, c) => sum + c.magnitudeSq(), 0);
+            if (totalMagnitudeSq > 0) {
+                const normFactor = Math.sqrt(totalMagnitudeSq);
+                for (let i = 0; i < newState.length; i++) {
+                    newState[i] = newState[i].div(normFactor);
+                }
+            } else {
+                // If state becomes zero vector (shouldn't happen in ideal quantum simulation), re-initialize
+                console.warn("State vector magnitude went to zero. Re-initializing.");
+                initializeState(numQubits);
+                return;
+            }
+
+            quantumState = newState;
+        }
+
+        // --- Circuit Building & Rendering ---
+
+        function renderCircuit() {
+            const circuitGrid = document.getElementById('circuit-grid');
+            circuitGrid.innerHTML = '';
+            const maxCircuitDepth = Math.max(1, ...circuit.map(row => row.length)); // Ensure at least 1 column
+
+            for (let i = 0; i < numQubits; i++) {
+                const qubitRow = document.createElement('div');
+                qubitRow.classList.add('qubit-row');
+
+                const qubitLabel = document.createElement('div');
+                qubitLabel.classList.add('qubit-label');
+                qubitLabel.textContent = `Qubit ${i}`;
+                qubitRow.appendChild(qubitLabel);
+
+                const gateContainer = document.createElement('div');
+                gateContainer.classList.add('gate-container');
+
+                // Ensure enough slots for current max depth
+                for (let j = 0; j < maxCircuitDepth; j++) {
+                    const gateSlot = document.createElement('div');
+                    gateSlot.classList.add('gate-slot');
+                    gateSlot.dataset.qubit = i;
+                    gateSlot.dataset.timestep = j;
+                    gateSlot.onclick = placeGate;
+
+                    if (circuit[i] && circuit[i][j]) {
+                        const gate = circuit[i][j];
+                        const gateDiv = document.createElement('div');
+                        gateDiv.classList.add('gate', `gate-${gate.type.toLowerCase()}`);
+                        gateDiv.textContent = gate.type;
+                        gateDiv.draggable = true;
+                        gateDiv.dataset.gateType = gate.type;
+                        gateDiv.dataset.qubit = i;
+                        gateDiv.dataset.timestep = j;
+                        gateDiv.ondragstart = dragStart;
+                        gateSlot.appendChild(gateDiv);
+
+                        // If CNOT, add control/target line
+                        if (gate.type === 'CNOT') {
+                            const controlQubit = gate.control;
+                            const targetQubit = gate.target;
+                            if (controlQubit !== null && targetQubit !== null) {
+                                // Draw connection
+                                if (i === controlQubit || i === targetQubit) {
+                                    if (i === controlQubit) {
+                                        gateDiv.textContent = '●'; // Control
+                                        gateDiv.classList.add('gate-control');
+                                    } else {
+                                        gateDiv.textContent = 'X'; // Target
+                                        gateDiv.classList.add('gate-target');
+                                    }
+
+                                    // Add connection line logic (purely visual in CSS via sibling selectors or JS drawing)
+                                    // This is a simplified visual representation.
+                                    // For true visual lines, you'd need SVG or canvas.
+                                    // Here, we'll use a data attribute and a generic CSS class.
+                                    gateDiv.dataset.cnotControl = controlQubit;
+                                    gateDiv.dataset.cnotTarget = targetQubit;
+                                }
+                            }
+                        }
+                    }
+                    gateContainer.appendChild(gateSlot);
+                }
+                circuitGrid.appendChild(qubitRow);
+            }
+            addEmptySlotsToEnd(); // Add an empty column at the end
+            drawCnotConnections(); // Call function to draw CNOT connections
+        }
+
+        function addEmptySlotsToEnd() {
+            const circuitGrid = document.getElementById('circuit-grid');
+            const currentRows = circuitGrid.children.length;
+            if (currentRows === 0) return; // No qubits yet
+
+            const currentCols = circuitGrid.children[0].children[1].children.length; // Number of gate slots in the first row
+
+            // Check if the last column is completely empty. If not, add a new one.
+            let lastColumnEmpty = true;
+            if (currentCols > 0) {
+                for (let i = 0; i < numQubits; i++) {
+                    if (circuit[i] && circuit[i][currentCols - 1]) {
+                        lastColumnEmpty = false;
+                        break;
+                    }
+                }
+            } else {
+                lastColumnEmpty = false; // If no columns, consider it not empty so we add one.
+            }
+
+            if (!lastColumnEmpty) {
+                for (let i = 0; i < numQubits; i++) {
+                    const gateSlot = document.createElement('div');
+                    gateSlot.classList.add('gate-slot');
+                    gateSlot.dataset.qubit = i;
+                    gateSlot.dataset.timestep = currentCols;
+                    gateSlot.onclick = placeGate;
+                    circuitGrid.children[i].children[1].appendChild(gateSlot);
+                }
+            }
+        }
+
+        function drawCnotConnections() {
+            // Remove existing CNOT connection lines
+            document.querySelectorAll('.cnot-line').forEach(line => line.remove());
+
+            circuit.forEach((qubitGates, qubitIndex) => {
+                qubitGates.forEach((gate, timestep) => {
+                    if (gate && gate.type === 'CNOT' && gate.control !== null && gate.target !== null) {
+                        const controlQubit = gate.control;
+                        const targetQubit = gate.target;
+
+                        // Only draw from the control qubit's perspective to avoid duplicates
+                        if (qubitIndex === controlQubit) {
+                            const controlSlot = document.querySelector(`.gate-slot[data-qubit="${controlQubit}"][data-timestep="${timestep}"]`);
+                            const targetSlot = document.querySelector(`.gate-slot[data-qubit="${targetQubit}"][data-timestep="${timestep}"]`);
+
+                            if (controlSlot && targetSlot) {
+                                const controlRect = controlSlot.getBoundingClientRect();
+                                const targetRect = targetSlot.getBoundingClientRect();
+                                const circuitGridRect = document.getElementById('circuit-grid').getBoundingClientRect();
+
+                                const startY = controlRect.top + controlRect.height / 2 - circuitGridRect.top;
+                                const endY = targetRect.top + targetRect.height / 2 - circuitGridRect.top;
+                                const startX = controlRect.left + controlRect.width / 2 - circuitGridRect.left;
+
+                                const line = document.createElement('div');
+                                line.classList.add('cnot-line');
+                                line.style.position = 'absolute';
+                                line.style.left = `${startX}px`;
+                                line.style.width = '2px';
+                                line.style.background = '#00d4ff';
+                                line.style.zIndex = '0'; // Behind gates
+
+                                if (controlQubit < targetQubit) {
+                                    line.style.top = `${startY}px`;
+                                    line.style.height = `${endY - startY}px`;
+                                } else {
+                                    line.style.top = `${endY}px`;
+                                    line.style.height = `${startY - endY}px`;
+                                }
+                                document.getElementById('circuit-grid').style.position = 'relative'; // Ensure grid is positioned
+                                document.getElementById('circuit-grid').appendChild(line);
+                            }
+                        }
+                    }
+                });
+            });
+        }
+
+        function selectGate(gateType) {
+            document.querySelectorAll('.palette-gate').forEach(gate => {
+                gate.classList.remove('selected');
+            });
+            const selectedPaletteGate = document.querySelector(`.palette-gate.gate-${gateType.toLowerCase()}`);
+            if (selectedPaletteGate) {
+                selectedPaletteGate.classList.add('selected');
+                selectedGateType = gateType;
+                displayGateDescription(gateType);
+            } else {
+                selectedGateType = null;
+                document.getElementById('gate-description').textContent = "Select a gate to see its description and matrix representation";
+            }
+        }
+
+        function displayGateDescription(gateType) {
+            const gateInfo = GATE_DEFINITIONS[gateType];
+            let descriptionHtml = `<p><strong>${gateType} Gate:</strong> ${gateInfo.description}</p>`;
+            
+            if (gateType !== 'CNOT') {
+                let matrix;
+                if (gateInfo.type === 'rotation') {
+                    const angle = parseFloat(document.getElementById('rotationAngle').value);
+                    matrix = gateInfo.matrix(angle * Math.PI);
+                } else {
+                    matrix = gateInfo.matrix;
+                }
+
+                descriptionHtml += '<p><strong>Matrix Representation:</strong></p>';
+                descriptionHtml += '<div class="matrix-display">';
+                descriptionHtml += '$$ \\begin{pmatrix}';
+                matrix.forEach((row, i) => {
+                    row.forEach((comp, j) => {
+                        descriptionHtml += comp.toString(2); // Reduced precision for display
+                        if (j < row.length - 1) descriptionHtml += ' & ';
+                    });
+                    if (i < matrix.length - 1) descriptionHtml += ' \\\\ ';
+                });
+                descriptionHtml += ' \\end{pmatrix} $$';
+                descriptionHtml += '</div>';
+            } else {
+                descriptionHtml += '<p>CNOT gate matrix depends on control/target qubits and is a 4x4 matrix for 2-qubit systems, expanding with tensor products for more qubits.</p>';
+            }
+
+            document.getElementById('gate-description').innerHTML = descriptionHtml;
+            MathJax.typesetPromise(); // Render LaTeX
+        }
+
+
+        function placeGate(event) {
+            if (!selectedGateType) {
+                alert("Please select a gate from the palette first.");
+                return;
+            }
+
+            const slot = event.currentTarget;
+            const qubitIndex = parseInt(slot.dataset.qubit);
+            const timeStep = parseInt(slot.dataset.timestep);
+
+            // If a gate already exists in this slot, remove it
+            if (circuit[qubitIndex] && circuit[qubitIndex][timeStep]) {
+                circuit[qubitIndex][timeStep] = null;
+                renderCircuit();
+                return;
+            }
+
+            // Initialize circuit array for qubit if it doesn't exist
+            if (!circuit[qubitIndex]) {
+                circuit[qubitIndex] = [];
+            }
+
+            if (selectedGateType === 'CNOT') {
+                // CNOT requires selecting two qubits: control and target
+                alert("For CNOT, first click on the control qubit slot, then the target qubit slot.");
+                // Store the first clicked slot (potential control)
+                const tempControl = { qubit: qubitIndex, timestep: timeStep };
+
+                // Temporarily mark the potential control slot
+                slot.style.border = '2px solid yellow';
+
+                const handleTargetSelection = (targetEvent) => {
+                    const targetSlot = targetEvent.currentTarget;
+                    const targetQubit = parseInt(targetSlot.dataset.qubit);
+                    const targetTimeStep = parseInt(targetSlot.dataset.timestep);
+
+                    if (targetTimeStep !== tempControl.timestep) {
+                        alert("CNOT control and target must be at the same time step.");
+                        slot.style.border = ''; // Reset border
+                        document.removeEventListener('click', handleTargetSelection, true); // Important to remove listener
+                        renderCircuit(); // Re-render to clear any partial state
+                        return;
+                    }
+                    if (targetQubit === tempControl.qubit) {
+                        alert("Control and target qubits cannot be the same.");
+                        slot.style.border = ''; // Reset border
+                        document.removeEventListener('click', handleTargetSelection, true);
+                        renderCircuit();
+                        return;
+                    }
+
+                    // Place CNOT on both control and target qubits at the same timestep
+                    if (!circuit[tempControl.qubit]) circuit[tempControl.qubit] = [];
+                    circuit[tempControl.qubit][tempControl.timestep] = { type: 'CNOT', control: tempControl.qubit, target: targetQubit };
+
+                    if (!circuit[targetQubit]) circuit[targetQubit] = [];
+                    circuit[targetQubit][targetTimeStep] = { type: 'CNOT', control: tempControl.qubit, target: targetQubit };
+
+                    slot.style.border = ''; // Reset border
+                    renderCircuit();
+                    document.removeEventListener('click', handleTargetSelection, true);
+                    selectedGateType = null; // Deselect gate after placing
+                    updateGatePaletteSelection();
+                };
+
+                // Add a one-time event listener for the next click to be the target qubit
+                // Use capture phase (true) to ensure it's caught before other click handlers
+                document.addEventListener('click', handleTargetSelection, true);
+
+            } else {
+                // For single-qubit gates
+                const angle = parseFloat(document.getElementById('rotationAngle').value);
+                circuit[qubitIndex][timeStep] = { type: selectedGateType, target: qubitIndex, angle: angle };
+                renderCircuit();
+                selectedGateType = null; // Deselect gate after placing
+                updateGatePaletteSelection();
+            }
+            resetState(); // Reset state after modifying circuit
+        }
+
+        function dragStart(event) {
+            const gateType = event.target.dataset.gateType;
+            const qubitIndex = event.target.dataset.qubit;
+            const timeStep = event.target.dataset.timestep;
+            event.dataTransfer.setData('text/plain', JSON.stringify({ gateType, qubitIndex, timeStep }));
+        }
+
+        function allowDrop(event) {
+            event.preventDefault();
+        }
+
+        function drop(event) {
+            event.preventDefault();
+            const data = JSON.parse(event.dataTransfer.getData('text/plain'));
+            const oldQubit = parseInt(data.qubit);
+            const oldTimeStep = parseInt(data.timestep);
+
+            const newQubit = parseInt(event.currentTarget.dataset.qubit);
+            const newTimeStep = parseInt(event.currentTarget.dataset.timestep);
+
+            // Move the gate in the circuit array
+            const gate = circuit[oldQubit][oldTimeStep];
+            circuit[oldQubit][oldTimeStep] = null; // Remove from old position
+
+            if (!circuit[newQubit]) circuit[newQubit] = [];
+            circuit[newQubit][newTimeStep] = gate; // Place in new position
+
+            // Update CNOT control/target if it was a CNOT
+            if (gate.type === 'CNOT') {
+                const controlQ = gate.control;
+                const targetQ = gate.target;
+                if (controlQ === oldQubit) { // If the dragged gate was the control
+                    circuit[targetQ][oldTimeStep] = null; // Remove partner
+                    if (!circuit[targetQ]) circuit[targetQ] = [];
+                    circuit[targetQ][newTimeStep] = { type: 'CNOT', control: newQubit, target: targetQ }; // New partner
+                    gate.control = newQubit; // Update self
+                } else if (targetQ === oldQubit) { // If the dragged gate was the target
+                    circuit[controlQ][oldTimeStep] = null; // Remove partner
+                    if (!circuit[controlQ]) circuit[controlQ] = [];
+                    circuit[controlQ][newTimeStep] = { type: 'CNOT', control: controlQ, target: newQubit }; // New partner
+                    gate.target = newQubit; // Update self
+                }
+            }
+
+            renderCircuit();
+            resetState();
+        }
+
+        function clearCircuit(reset = true) {
+            circuit = Array(numQubits).fill(null).map(() => []); // Reset circuit structure
+            if (reset) {
+                resetState();
+            }
+            renderCircuit();
+            document.getElementById('analysis-results').style.display = 'none';
+        }
+
+        function updateGatePaletteSelection() {
+            document.querySelectorAll('.palette-gate').forEach(gate => {
+                gate.classList.remove('selected');
+            });
+        }
+
+        // --- Quantum Operations ---
+
+        async function runCircuit() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            await new Promise(resolve => setTimeout(resolve, 50)); // Allow spinner to show
+
+            resetState(); // Start from |00...0>
+            circuitHistory.push([...quantumState]); // Save initial state
+
+            const maxTimeStep = Math.max(0, ...circuit.map(row => row.length));
+
+            for (let t = 0; t < maxTimeStep; t++) {
+                // Collect gates at this time step
+                let gatesAtCurrentTime = [];
+                for (let q = 0; q < numQubits; q++) {
+                    if (circuit[q] && circuit[q][t]) {
+                        gatesAtCurrentTime.push({ gate: circuit[q][t], qubit: q, timeStep: t });
+                    }
+                }
+
+                // Process single/rotation gates first
+                for (const { gate, qubit } of gatesAtCurrentTime) {
+                    if (gate.type !== 'CNOT') {
+                        applyGate(quantumState, gate.type, qubit, null, gate.angle);
+                        quantumState = normalizeState(quantumState); // Normalize after each gate application
+                    }
+                }
+
+                // Process CNOT gates. Need to handle control and target properly to avoid double application.
+                const cnotProcessed = new Set();
+                for (const { gate, qubit } of gatesAtCurrentTime) {
+                    if (gate.type === 'CNOT' && !cnotProcessed.has(`${gate.control}-${gate.target}-${t}`)) {
+                        applyGate(quantumState, gate.type, gate.target, gate.control);
+                        quantumState = normalizeState(quantumState); // Normalize after each gate application
+                        cnotProcessed.add(`${gate.control}-${gate.target}-${t}`);
+                        cnotProcessed.add(`${gate.target}-${gate.control}-${t}`); // Mark the target part as processed too
+                    }
+                }
+                circuitHistory.push([...quantumState]); // Save state after this timestep
+            }
+            updateDisplay();
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+        async function stepCircuit() {
+            document.getElementById('loadingSpinner').style.display = 'block';
+            await new Promise(resolve => setTimeout(resolve, 50)); // Allow spinner to show
+
+            if (currentStep >= circuitHistory.length) {
+                // If not yet run or at the end, run the whole circuit to generate history
+                if (circuitHistory.length === 0) {
+                    await runCircuit();
+                } else {
+                    alert("End of circuit steps. Run circuit again to restart.");
+                }
+                document.getElementById('loadingSpinner').style.display = 'none';
+                return;
+            }
+
+            if (currentStep === 0) {
+                // Special case for initial state, which is already in history[0]
+                initializeState(numQubits);
+                circuitHistory = [[...quantumState]];
+                const maxTimeStep = Math.max(0, ...circuit.map(row => row.length));
+                for (let t = 0; t < maxTimeStep; t++) {
+                    let tempState = [...circuitHistory[circuitHistory.length - 1]]; // Start from previous step's state
+
+                    let gatesAtCurrentTime = [];
+                    for (let q = 0; q < numQubits; q++) {
+                        if (circuit[q] && circuit[q][t]) {
+                            gatesAtCurrentTime.push({ gate: circuit[q][t], qubit: q, timeStep: t });
+                        }
+                    }
+
+                    // Process single/rotation gates first
+                    for (const { gate, qubit } of gatesAtCurrentTime) {
+                        if (gate.type !== 'CNOT') {
+                            applyGate(tempState, gate.type, qubit, null, gate.angle);
+                            tempState = normalizeState(tempState);
+                        }
+                    }
+
+                    const cnotProcessed = new Set();
+                    for (const { gate, qubit } of gatesAtCurrentTime) {
+                        if (gate.type === 'CNOT' && !cnotProcessed.has(`${gate.control}-${gate.target}-${t}`)) {
+                            applyGate(tempState, gate.type, gate.target, gate.control);
+                            tempState = normalizeState(tempState);
+                            cnotProcessed.add(`${gate.control}-${gate.target}-${t}`);
+                            cnotProcessed.add(`${gate.target}-${gate.control}-${t}`);
+                        }
+                    }
+                    circuitHistory.push([...tempState]);
+                }
+            }
+            
+            quantumState = [...circuitHistory[currentStep]];
+            updateDisplay();
+            currentStep++;
+            document.getElementById('loadingSpinner').style.display = 'none';
+        }
+
+
+        function normalizeState(state) {
+            let totalMagnitudeSq = state.reduce((sum, c) => sum + c.magnitudeSq(), 0);
+            if (totalMagnitudeSq === 0) {
+                return new Array(state.length).fill(new Complex(0,0)); // Return zero vector or handle error
+            }
+            const normFactor = Math.sqrt(totalMagnitudeSq);
+            return state.map(c => c.div(normFactor));
+        }
+
+
+        function measureAll() {
+            let probabilities = quantumState.map(c => c.magnitudeSq());
+            const randomValue = Math.random();
+            let cumulativeProbability = 0;
+            let measuredState = '';
+
+            for (let i = 0; i < probabilities.length; i++) {
+                cumulativeProbability += probabilities[i];
+                if (randomValue < cumulativeProbability) {
+                    measuredState = i.toString(2).padStart(numQubits, '0');
+                    break;
+                }
+            }
+
+            // Collapse state to the measured outcome
+            quantumState = new Array(quantumState.length).fill(new Complex(0, 0));
+            quantumState[parseInt(measuredState, 2)] = new Complex(1, 0);
+
+            // Update measurement counts
+            measurementCounts[measuredState] = (measurementCounts[measuredState] || 0) + 1;
+            totalMeasurements++;
+
+            updateDisplay();
+            updateHistogram();
+            document.getElementById('measurement-results').innerHTML = `<div class="measurement-result quantum-effect">Measured: <strong>|${measuredState}⟩</strong></div>`;
+        }
+
+
+        // --- Display Functions ---
+
+        function updateDisplay() {
+            const stateDisplay = document.getElementById('state-display');
+            const complexAmplitudesDiv = document.getElementById('complex-amplitudes');
+            stateDisplay.innerHTML = '';
+            complexAmplitudesDiv.innerHTML = '';
+
+            let mostProbableState = '';
+            let maxProbability = -1;
+            let totalAmplitudePhase = 0;
+            let activeStatesCount = 0;
+
+            const states = 2 ** numQubits;
+            for (let i = 0; i < states; i++) {
+                const probability = quantumState[i].magnitudeSq();
+                const binaryState = i.toString(2).padStart(numQubits, '0');
+
+                if (probability > 0.001) { // Only display significant amplitudes
+                    const amplitudeBar = document.createElement('div');
+                    amplitudeBar.classList.add('amplitude-bar');
+
+                    const label = document.createElement('div');
+                    label.classList.add('amplitude-label');
+                    label.textContent = `|${binaryState}⟩:`;
+                    amplitudeBar.appendChild(label);
+
+                    const visualContainer = document.createElement('div');
+                    visualContainer.classList.add('amplitude-visual');
+                    const fill = document.createElement('div');
+                    fill.classList.add('amplitude-fill');
+                    fill.style.width = `${probability * 100}%`;
+                    visualContainer.appendChild(fill);
+                    amplitudeBar.appendChild(visualContainer);
+
+                    const value = document.createElement('div');
+                    value.classList.add('amplitude-value');
+                    value.textContent = `${(probability * 100).toFixed(2)}%`;
+                    amplitudeBar.appendChild(value);
+                    stateDisplay.appendChild(amplitudeBar);
+
+                    activeStatesCount++;
+
+                    // Update most probable state
+                    if (probability > maxProbability) {
+                        maxProbability = probability;
+                        mostProbableState = `|${binaryState}⟩`;
+                    }
+                    totalAmplitudePhase += quantumState[i].phase();
+                }
+
+                // Display complex amplitudes
+                const complexSpan = document.createElement('span');
+                complexSpan.classList.add('complex-number');
+                complexSpan.innerHTML = `|${binaryState}⟩: ${quantumState[i].toString()}`;
+                complexAmplitudesDiv.appendChild(complexSpan);
+            }
+
+            // Update statistics panel
+            document.getElementById('current-state').textContent = mostProbableState || '|0'.repeat(numQubits) + '⟩';
+            document.getElementById('superposition-status').textContent = activeStatesCount > 1 ? 'Yes' : 'No';
+            checkEntanglement(); // This updates entanglement-status
+            document.getElementById('purity-measure').textContent = calculatePurity().toFixed(3);
+
+            // Update phase wheel
+            const phaseIndicator = document.getElementById('phase-indicator');
+            // For multi-qubit system, phase visualization is tricky. A simple approach is the phase of the dominant amplitude, or average phase if sensible.
+            // For now, let's just pick the phase of the |00...0> state.
+            const dominantPhase = quantumState[0].phase();
+            phaseIndicator.style.transform = `translateX(-50%) rotate(${dominantPhase * 180 / Math.PI}deg)`;
+        }
+
+        function updateHistogram() {
+            const histogramDiv = document.getElementById('histogram');
+            histogramDiv.innerHTML = '';
+            const allStates = Object.keys(measurementCounts).sort();
+
+            let maxCount = 0;
+            for (const state of allStates) {
+                if (measurementCounts[state] > maxCount) {
+                    maxCount = measurementCounts[state];
+                }
+            }
+
+            if (totalMeasurements === 0) {
+                 histogramDiv.innerHTML = '<p style="text-align: center; color: #b3b3b3;">No measurements taken yet. Run circuit and click "Measure All".</p>';
+                 document.getElementById('total-measurements').textContent = '0';
+                 document.getElementById('entropy-measure').textContent = '0.000';
+                 return;
+            }
+
+            document.getElementById('total-measurements').textContent = totalMeasurements;
+
+            let entropy = 0;
+            for (const state of allStates) {
+                const count = measurementCounts[state];
+                const probability = totalMeasurements > 0 ? count / totalMeasurements : 0;
+                if (probability > 0) { // Avoid log(0)
+                    entropy -= probability * Math.log2(probability);
+                }
+
+                const bar = document.createElement('div');
+                bar.classList.add('histogram-bar');
+                const height = maxCount > 0 ? (count / maxCount) * 90 : 0; // Max height 90% to leave room for labels
+                bar.style.height = `${height}%`;
+
+                const label = document.createElement('div');
+                label.classList.add('histogram-label');
+                label.textContent = `|${state}⟩`;
+                bar.appendChild(label);
+
+                const countLabel = document.createElement('div');
+                countLabel.classList.add('histogram-count');
+                countLabel.textContent = `${count}`;
+                bar.appendChild(countLabel);
+
+                histogramDiv.appendChild(bar);
+            }
+            document.getElementById('entropy-measure').textContent = entropy.toFixed(3);
+        }
+
+        // --- Advanced Features ---
+
+        function addNoise() {
+            const noiseLevel = parseFloat(document.getElementById('noiseLevel').value);
+            if (noiseLevel === 0) {
+                alert("Noise level is 0%. No noise added.");
+                return;
+            }
+
+            const D = 2 ** numQubits;
+            let newState = quantumState.map(c => new Complex(c.re, c.im)); // Deep copy
+
+            for (let i = 0; i < D; i++) {
+                // Add random real and imaginary noise components
+                const realNoise = (Math.random() * 2 - 1) * noiseLevel; // between -noiseLevel and +noiseLevel
+                const imagNoise = (Math.random() * 2 - 1) * noiseLevel;
+                
+                newState[i] = newState[i].add(new Complex(realNoise, imagNoise));
+            }
+            
+            quantumState = normalizeState(newState);
+            updateDisplay();
+            alert(`Quantum noise (${(noiseLevel * 100).toFixed(0)}%) added to the state.`);
+        }
+
+        function analyzeComplexity() {
+            let gateCount = 0;
+            let maxDepth = 0;
+            const gateTypes = {};
+
+            // Calculate max depth
+            const timeSteps = [];
+            for(let i=0; i<numQubits; i++) {
+                if(circuit[i]) timeSteps.push(circuit[i].length);
+            }
+            maxDepth = Math.max(0, ...timeSteps);
+
+            const gateCountsPerTimestep = new Array(maxDepth).fill(0);
+
+            circuit.forEach(qubitGates => {
+                qubitGates.forEach((gate, t) => {
+                    if (gate) {
+                        gateCount++;
+                        gateTypes[gate.type] = (gateTypes[gate.type] || 0) + 1;
+                        if (t < maxDepth) { // Ensure time step is within maxDepth
+                            gateCountsPerTimestep[t]++;
+                        }
+                    }
+                });
+            });
+
+            let analysisHtml = `
+                <p><strong>Total Gates:</strong> ${gateCount}</p>
+                <p><strong>Circuit Depth:</strong> ${maxDepth}</p>
+                <p><strong>Gate Distribution:</strong></p>
+                <ul>
+            `;
+            for (const type in gateTypes) {
+                analysisHtml += `<li>${type}: ${gateTypes[type]}</li>`;
+            }
+            analysisHtml += `</ul>`;
+
+            document.getElementById('complexity-analysis').innerHTML = analysisHtml;
+            document.getElementById('analysis-results').style.display = 'block';
+        }
+
+        function optimizeCircuit() {
+            alert("Circuit optimization is a complex feature that would involve advanced algorithms (e.g., Qiskit Transpiler concepts). This is a placeholder for future implementation!");
+        }
+
+        // Entanglement detection (simplified heuristic)
+        function checkEntanglement() {
+            // For 1 qubit, it's never entangled.
+            if (numQubits === 1) {
+                document.getElementById('entanglement-status').textContent = 'N/A';
+                return false;
+            }
+
+            // A simple heuristic for entanglement:
+            // If the state can be written as a tensor product of single qubit states, it's separable.
+            // Otherwise, it's entangled. This is a complex check.
+            // For a general state |ψ⟩ = Σα_i |i⟩, check if it's separable.
+            // For 2 qubits: |ψ⟩ = a|00⟩ + b|01⟩ + c|10⟩ + d|11⟩ is separable if ad = bc.
+            // This becomes quickly complex for more qubits.
+            // For now, we'll use a simpler check for common entangled states (Bell states) or a rough heuristic.
+
+            let isEntangled = false;
+            const stateSize = 2 ** numQubits;
+
+            if (numQubits === 2) {
+                const [a, b, c, d] = quantumState;
+                // Check for ad - bc != 0 (criterion for 2-qubit entanglement)
+                const ad_bc = (a.mul(d)).sub(b.mul(c));
+                if (ad_bc.magnitude() > 1e-9) { // Using a small epsilon for float comparison
+                    isEntangled = true;
+                }
+            } else if (numQubits > 2) {
+                // For more than 2 qubits, a robust check is computationally expensive.
+                // A common heuristic: if a Hadamard is followed by a CNOT, it's often entangled.
+                // Or, if multiple amplitudes are non-zero AND the state isn't a product state.
+                // For simplicity, we'll consider it entangled if not a simple product of basis states.
+                // This is a placeholder and not a mathematically rigorous entanglement measure.
+                let nonZeroAmplitudes = quantumState.filter(c => c.magnitudeSq() > 1e-9);
+                if (nonZeroAmplitudes.length > 1) {
+                    // This is a very weak check, needs improvement for real entanglement detection.
+                    // For now, assume if multiple outcomes have significant probability and not a simple single-qubit state, it might be entangled.
+                    // A proper check involves computing the density matrix and its eigenvalues (Von Neumann entropy).
+                    // Or, checking if it can be written as a tensor product.
+                    // For example, if it's a Bell state, it's entangled.
+                    // |00>+|11> is (1,0,0,1)/sqrt(2), |01>+|10> is (0,1,1,0)/sqrt(2)
+                    const bellStates = [
+                        [new Complex(1/Math.sqrt(2), 0), new Complex(0,0), new Complex(0,0), new Complex(1/Math.sqrt(2), 0)],
+                        [new Complex(1/Math.sqrt(2), 0), new Complex(0,0), new Complex(0,0), new Complex(-1/Math.sqrt(2), 0)],
+                        [new Complex(0,0), new Complex(1/Math.sqrt(2), 0), new Complex(1/Math.sqrt(2), 0), new Complex(0,0)],
+                        [new Complex(0,0), new Complex(1/Math.sqrt(2), 0), new Complex(-1/Math.sqrt(2), 0), new Complex(0,0)]
+                    ];
+                    if (numQubits === 2) {
+                        for (const bellState of bellStates) {
+                            let match = true;
+                            for (let i = 0; i < 4; i++) {
+                                // Check if amplitudes are proportional (allowing for global phase)
+                                if (Math.abs(quantumState[i].magnitude() - bellState[i].magnitude()) > 1e-9) {
+                                    match = false;
+                                    break;
+                                }
+                            }
+                            if (match) {
+                                isEntangled = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        // More complex check for >2 qubits, often involves checking if density matrix is pure or mixed.
+                        // For a simple simulator, if a CNOT was used and the state is not a clear product state.
+                        // This is a very rough approximation without full density matrix calculation.
+                        isEntangled = false; // Default to false for multi-qubit unless explicitly verified.
+                        // Can add specific checks for GHZ states etc. if desired.
+                    }
+                }
+            }
+            
+            document.getElementById('entanglement-status').textContent = isEntangled ? 'Yes' : 'No';
+            return isEntangled;
+        }
+
+        // Purity (simplified)
+        function calculatePurity() {
+            // For a pure state, purity is 1. For mixed states, it's less than 1.
+            // For a simulator that only tracks pure states, it should always be 1,
+            // unless noise is introduced.
+            // This is a simple approximation. True purity calculation involves density matrix.
+            let sumProbabilitiesSquared = quantumState.reduce((sum, c) => sum + c.magnitudeSq() * c.magnitudeSq(), 0);
+            return Math.sqrt(sumProbabilitiesSquared); // A simplified metric. Should ideally be Tr(ρ^2)
+        }
+
+        // Export/Import functions
+        function exportCircuit() {
+            const circuitData = {
+                qubitCount: numQubits,
+                circuit: circuit.map(row => row.map(gate => gate ? { ...gate, matrix: undefined } : null)) // Exclude matrix for cleaner export
+            };
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(circuitData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "quantum_circuit.json");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            alert("Circuit exported successfully!");
+        }
+
+        function importCircuit() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (event) => {
+                const file = event.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const importedData = JSON.parse(e.target.result);
+                            if (importedData.qubitCount && importedData.circuit) {
+                                numQubits = importedData.qubitCount;
+                                document.getElementById('qubitCount').value = numQubits;
+                                circuit = importedData.circuit.map(row => row.map(gateData => {
+                                    if (!gateData) return null;
+                                    // Re-attach gate matrix function if needed (e.g., for rotation gates)
+                                    const gateDef = GATE_DEFINITIONS[gateData.type];
+                                    if (gateDef && gateDef.type === 'rotation') {
+                                        return { ...gateData, matrix: gateDef.matrix };
+                                    }
+                                    return gateData;
+                                }));
+                                resetState();
+                                renderCircuit();
+                                alert("Circuit imported successfully!");
+                            } else {
+                                throw new Error("Invalid circuit file format.");
+                            }
+                        } catch (error) {
+                            alert("Failed to import circuit: " + error.message);
+                            console.error("Import error:", error);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        }
+
+        function exportResults() {
+            if (totalMeasurements === 0) {
+                alert("No measurement results to export yet. Please run some measurements.");
+                return;
+            }
+
+            let csvContent = "State,Count,Probability\n";
+            const sortedStates = Object.keys(measurementCounts).sort();
+            for (const state of sortedStates) {
+                const count = measurementCounts[state];
+                const probability = (count / totalMeasurements).toFixed(4);
+                csvContent += `${state},${count},${probability}\n`;
+            }
+
+            const dataStr = "data:text/csv;charset=utf-8," + encodeURIComponent(csvContent);
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", "measurement_results.csv");
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            alert("Measurement results exported to CSV!");
+        }
+
+
+        // Examples Loader
+        function loadExample(exampleType) {
+            clearCircuit(); // Clear current circuit first
+
+            document.getElementById('qubitCount').value = 2; // Most examples are 2 qubits
+            numQubits = 2;
+            updateQubitCount(); // This will re-initialize state and render grid
+
+            if (exampleType === 'superposition') {
+                document.getElementById('qubitCount').value = 1;
+                numQubits = 1;
+                updateQubitCount();
+                // Qubit 0, time step 0: Hadamard
+                if (!circuit[0]) circuit[0] = [];
+                circuit[0][0] = { type: 'H', target: 0, angle: null };
+            } else if (exampleType === 'bell_state') {
+                document.getElementById('qubitCount').value = 2;
+                numQubits = 2;
+                updateQubitCount();
+                // Qubit 0, time step 0: Hadamard
+                if (!circuit[0]) circuit[0] = [];
+                circuit[0][0] = { type: 'H', target: 0, angle: null };
+
+                // Qubit 0 (control), Qubit 1 (target), time step 1: CNOT
+                if (!circuit[0]) circuit[0] = [];
+                if (!circuit[1]) circuit[1] = [];
+                circuit[0][1] = { type: 'CNOT', control: 0, target: 1 };
+                circuit[1][1] = { type: 'CNOT', control: 0, target: 1 }; // Mark target qubit's slot too
+            } else if (exampleType === 'teleportation') {
+                document.getElementById('qubitCount').value = 3;
+                numQubits = 3;
+                updateQubitCount();
+
+                // Teleportation: simplified version
+                // Q0 (message), Q1 & Q2 (Bell pair)
+                // Step 0: Create Bell pair between Q1 and Q2
+                if (!circuit[1]) circuit[1] = [];
+                circuit[1][0] = { type: 'H', target: 1, angle: null }; // H on Q1
+
+                if (!circuit[1]) circuit[1] = [];
+                if (!circuit[2]) circuit[2] = [];
+                circuit[1][1] = { type: 'CNOT', control: 1, target: 2 }; // CNOT Q1-Q2
+                circuit[2][1] = { type: 'CNOT', control: 1, target: 2 };
+
+                // Step 2: Entangle Q0 with Q1 (H on Q0, CNOT Q0-Q1)
+                if (!circuit[0]) circuit[0] = [];
+                circuit[0][2] = { type: 'H', target: 0, angle: null }; // H on Q0
+
+                if (!circuit[0]) circuit[0] = [];
+                if (!circuit[1]) circuit[1] = [];
+                circuit[0][3] = { type: 'CNOT', control: 0, target: 1 }; // CNOT Q0-Q1
+                circuit[1][3] = { type: 'CNOT', control: 0, target: 1 };
+
+                // This example doesn't represent classical communication and conditional gates accurately in the UI.
+                // It just sets up the pre-teleportation state.
+                // For a full visual teleportation, you'd need classical measurement and conditional applications.
+            }
+            renderCircuit();
+            resetState();
+            runCircuit(); // Run example immediately
+        }
+
+    </script>
+</body>
+</html>
